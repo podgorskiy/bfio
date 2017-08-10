@@ -88,6 +88,26 @@ namespace bfio
 		IStream& stream;
 	};
 
+	class SizeCalculator : public IStream
+	{
+	public:
+		SizeCalculator() : m_size(0)
+		{};
+
+		size_t GetSize() const
+		{
+			return m_size;
+		}
+	private:
+		virtual bool Read(char* dst, size_t size) override
+		{
+			m_size += size;
+			return true;
+		}
+
+		size_t m_size;
+	};
+
 	template<>
 	inline void Writer::operator& (char& x)
 	{
@@ -235,14 +255,14 @@ namespace bfio
 	template<typename T>
 	inline void operator << (OStream& stream, const T& object)
 	{
-		bfio::Writer writer(stream);
+		Writer writer(stream);
 		writer & const_cast<T&>(object);
 	}
 
 	template<typename T>
 	inline void operator >> (IStream& stream, T& object)
 	{
-		bfio::Reader reader(stream);
+		Reader reader(stream);
 		reader & object;
 	}
 
@@ -350,6 +370,15 @@ namespace bfio
 		{
 			w & v[i];
 		}
+	}
+
+	template <typename T>
+	inline size_t SizeOf()
+	{
+		SizeCalculator calc;
+		Reader reader(calc);
+		reader & *static_cast<T*>(nullptr);
+		return calc.GetSize();
 	}
 
 	class CFileStream : public IOStream
