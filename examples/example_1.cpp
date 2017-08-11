@@ -41,7 +41,7 @@ namespace bfio
 	}
 }
 
-void main()
+int main()
 {
 	{
 		FILE* f = fopen("test.bin", "wb");
@@ -143,4 +143,5 @@ void main()
 			printf("%s", a);
 		}
 	}
+	return 0;
 }

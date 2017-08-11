@@ -117,7 +117,7 @@ namespace bfio
 	}
 }
 
-void main()
+int main()
 {
 	FILE* f = fopen("archive.zip", "rb");
 	bfio::CFileStream stream(f);
@@ -170,4 +170,5 @@ void main()
 		fseek(f, currPos + header.fileNameLength + header.extraFieldLength + header.fileCommentLength, SEEK_SET);
 	}
 	fclose(f);
+	return 0;
 }
