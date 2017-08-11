@@ -59,7 +59,7 @@ void main()
 
 		MyStream(f) << std::string("asdasd");
 
-		printf("%d", (int)bfio::SizeOf<int>());
+		printf("%d\n", (int)bfio::SizeOf<int>());
 
 		fclose(f);
 	}
@@ -132,5 +132,15 @@ void main()
 			sms >> str;
 		}
 		delete[] data;
+	}
+	{
+		const char* data = "abcd";
+
+		bfio::DynamicMemoryStream dms(data, strlen(data) + 1);
+		{
+			char a[5];
+			dms >> a;
+			printf("%s", a);
+		}
 	}
 }

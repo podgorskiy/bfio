@@ -7,25 +7,46 @@
 
 namespace bfio
 {
-	struct Reading;
-	struct Writing;
+	enum AccessType
+	{
+		Reading,
+		Writing
+	};
 
-	template<typename T>
-	struct Stream
-	{};
-	
-	template<typename Stream, typename accessType>
-	class Accessor
+
+	template<typename StreamType>
+	class Stream
 	{
 	public:
-		Accessor(Stream& stream) :stream(stream)
+		template<typename T>
+		inline void operator << (const T& object)
 		{
+			StreamType& stream_ = static_cast<StreamType&>(*this);
+			Accessor<StreamType, Writing> accessor(stream_);
+			accessor & const_cast<T&>(object);
 		}
+
+		template<typename T>
+		inline void operator >> (const T& object)
+		{
+			StreamType& stream_ = static_cast<StreamType&>(*this);
+			Accessor<StreamType, Reading> accessor(stream_);
+			accessor & const_cast<T&>(object);
+		}
+	};
+
+
+	template<typename Stream, typename D>
+	class AccessorBase
+	{
+	public:
+		AccessorBase(Stream& stream) :stream(stream)
+		{}
 
 		template<typename T>
 		void operator & (T& x)
 		{
-			Serialize(*this, x);
+			Serialize(static_cast<D&>(*this), x);
 		}
 
 		template<typename T, size_t N>
@@ -36,27 +57,43 @@ namespace bfio
 				*this & x[i];
 			}
 		}
+		
+	protected:
+		Stream& stream;
+	};
 
+
+	template<typename Stream, AccessType accessType>
+	class Accessor;
+	
+
+	template<typename Stream>
+	class Accessor<Stream, Reading> : public AccessorBase<Stream, Accessor<Stream, Reading> >
+	{
+	public:
+		Accessor(Stream& stream) :AccessorBase<Stream, Accessor<Stream, Reading> >(stream)
+		{}
 		template<typename T>
 		bool Access(T& x)
 		{
-			return Access(x, (accessType*)nullptr);
-		}
-
-	private:
-		template<typename T>
-		bool Access(T& x, Reading*)
-		{
 			return stream.Read(reinterpret_cast<char*>(&x), sizeof(T));
 		}
+	};
+
+	
+	template<typename Stream>
+	class Accessor<Stream, Writing> : public AccessorBase<Stream, Accessor<Stream, Writing> >
+	{
+	public:
+		Accessor(Stream& stream) : AccessorBase<Stream, Accessor<Stream, Writing> >(stream)
+		{}
 		template<typename T>
-		bool Access(T& x, Writing*)
+		bool Access(T& x)
 		{
 			return stream.Write(reinterpret_cast<const char*>(&x), sizeof(T));
 		}
-
-		Stream& stream;
 	};
+
 
 	template<class A>
 	inline void Serialize(A& io, char& v)
@@ -130,23 +167,6 @@ namespace bfio
 		io.Access(v);
 	}
 
-	template<typename StreamType, typename T>
-	inline void operator << (Stream<StreamType>& stream, const T& object)
-	{
-		StreamType& stream_ = static_cast<StreamType&>(stream);
-		Accessor<StreamType, Writing> accessor(stream_);
-		accessor & const_cast<T&>(object);
-	}
-
-	template<typename StreamType, typename T>
-	inline void operator >> (Stream<StreamType>& stream, const T& object)
-	{
-		StreamType& stream_ = static_cast<StreamType&>(stream);
-		Accessor<StreamType, Reading> accessor(stream_);
-		accessor & const_cast<T&>(object);
-	}
-
-	///
 	template<class A, typename T1, typename T2>
 	inline void Serialize(A& io, std::pair<T1, T2>& v)
 	{
@@ -253,7 +273,8 @@ namespace bfio
 		}
 	}
 
-	class SizeCalculator : bfio::Stream<SizeCalculator>
+
+	class SizeCalculator : public Stream<SizeCalculator>
 	{
 	public:
 		SizeCalculator(): m_size(0)
@@ -271,6 +292,7 @@ namespace bfio
 		size_t m_size;
 	};
 
+
 	template <typename T>
 	inline size_t SizeOf()
 	{
@@ -280,7 +302,8 @@ namespace bfio
 		return calc.GetSize();
 	}
 
-	class CFileStream : public bfio::Stream<CFileStream>
+
+	class CFileStream : public Stream<CFileStream>
 	{
 	public:
 		CFileStream(FILE* f) : file(f)
@@ -299,7 +322,8 @@ namespace bfio
 		FILE* file;
 	};
 
-	class MemoryStream : public bfio::Stream<CFileStream>
+
+	class MemoryStream
 	{
 		MemoryStream(const MemoryStream& other) = delete; // non construction-copyable
 		MemoryStream& operator=(const MemoryStream&) = delete; // non copyable
@@ -339,7 +363,7 @@ namespace bfio
 	};
 
 
-	class StaticMemoryStream : public MemoryStream
+	class StaticMemoryStream : public MemoryStream, public Stream<StaticMemoryStream>
 	{
 	public:
 		StaticMemoryStream(char* data, size_t size): MemoryStream(data, size)
@@ -382,7 +406,7 @@ namespace bfio
 	};
 
 
-	class DynamicMemoryStream : public MemoryStream
+	class DynamicMemoryStream : public MemoryStream, public Stream<DynamicMemoryStream>
 	{
 		enum
 		{
@@ -392,6 +416,11 @@ namespace bfio
 		DynamicMemoryStream() : MemoryStream(nullptr, 0), m_reserved(0)
 		{
 			Resize(InitialReservedSize);
+		}
+		DynamicMemoryStream(const char* data, size_t size) : MemoryStream(nullptr, 0), m_reserved(0)
+		{
+			Resize(InitialReservedSize < size ? size : InitialReservedSize);
+			memcpy(m_data, data, size);
 		}
 
 		~DynamicMemoryStream()
