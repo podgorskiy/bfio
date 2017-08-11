@@ -1,5 +1,5 @@
 #pragma once
-#include <stdint.h>
+#include <cstdlib>
 #include <vector>
 #include <string>
 #include <map>
@@ -12,6 +12,10 @@ namespace bfio
 		Reading,
 		Writing
 	};
+	
+
+	template<class Stream, AccessType accessType>
+	class Accessor;
 
 
 	template<typename StreamType>
@@ -36,7 +40,7 @@ namespace bfio
 	};
 
 
-	template<typename Stream, typename D>
+	template<class Stream, typename D>
 	class AccessorBase
 	{
 	public:
@@ -63,11 +67,7 @@ namespace bfio
 	};
 
 
-	template<typename Stream, AccessType accessType>
-	class Accessor;
-	
-
-	template<typename Stream>
+	template<class Stream>
 	class Accessor<Stream, Reading> : public AccessorBase<Stream, Accessor<Stream, Reading> >
 	{
 	public:
@@ -78,6 +78,9 @@ namespace bfio
 		{
 			return stream.Read(reinterpret_cast<char*>(&x), sizeof(T));
 		}
+
+	private:
+		using AccessorBase<Stream, Accessor<Stream, Reading> >::stream;
 	};
 
 	
@@ -92,6 +95,9 @@ namespace bfio
 		{
 			return stream.Write(reinterpret_cast<const char*>(&x), sizeof(T));
 		}
+		
+	private:
+		using AccessorBase<Stream, Accessor<Stream, Writing> >::stream;
 	};
 
 
@@ -217,7 +223,7 @@ namespace bfio
 	{
 		size_t size = x.size();
 		w & size;
-		for (std::map<Key, Val>::iterator it = x.begin(); it != x.end(); ++it)
+		for (typename std::map<Key, Val>::iterator it = x.begin(); it != x.end(); ++it)
 		{
 			Key k = it->first;
 			w & k;
@@ -234,8 +240,7 @@ namespace bfio
 		for (size_t i = 0; i < size; ++i)
 		{
 			w & k;
-			w & val;
-			x[k] = val;
+			x.insert(k);
 		}
 	}
 
@@ -244,7 +249,7 @@ namespace bfio
 	{
 		size_t size = x.size();
 		w & size;
-		for (std::set<Key>::iterator it = x.begin(); it != x.end(); ++it)
+		for (typename std::set<Key>::iterator it = x.begin(); it != x.end(); ++it)
 		{
 			w & *it;
 		}
@@ -298,7 +303,7 @@ namespace bfio
 	{
 		SizeCalculator calc;
 		Accessor<SizeCalculator, Writing> accessor(calc);
-		accessor & *reinterpret_cast<T*>(nullptr);
+		accessor & *(T*)(nullptr);
 		return calc.GetSize();
 	}
 
