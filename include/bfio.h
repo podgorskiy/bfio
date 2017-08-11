@@ -7,27 +7,18 @@
 
 namespace bfio
 {
-	class OStream
-	{
-	public:
-		virtual ~OStream() {};
-		virtual bool Write(const char* src, size_t size) = 0;
-	};
+	struct Reading;
+	struct Writing;
 
-	class IStream
-	{
-	public:
-		virtual ~IStream() {};
-		virtual bool Read(char* dst, size_t size) = 0;
-	};
-
-	class IOStream : public IStream, public OStream
+	template<typename T>
+	struct Stream
 	{};
-
-	class Writer
+	
+	template<typename Stream, typename accessType>
+	class Accessor
 	{
 	public:
-		Writer(OStream& stream) :stream(stream)
+		Accessor(Stream& stream) :stream(stream)
 		{
 		}
 
@@ -46,237 +37,125 @@ namespace bfio
 			}
 		}
 
+		template<typename T>
+		bool Access(T& x)
+		{
+			return Access(x, (accessType*)nullptr);
+		}
+
 	private:
 		template<typename T>
-		bool Write(T& x)
+		bool Access(T& x, Reading*)
+		{
+			return stream.Read(reinterpret_cast<char*>(&x), sizeof(T));
+		}
+		template<typename T>
+		bool Access(T& x, Writing*)
 		{
 			return stream.Write(reinterpret_cast<const char*>(&x), sizeof(T));
 		}
 
-		OStream& stream;
+		Stream& stream;
 	};
 
-	class Reader
+	template<class A>
+	inline void Serialize(A& io, char& v)
 	{
-	public:
-		Reader(IStream& stream) :stream(stream)
-		{
-		}
-
-		template<typename T>
-		void operator & (T& x)
-		{
-			Serialize(*this, x);
-		}
-
-		template<typename T, size_t N>
-		void operator & (T(&x)[N])
-		{
-			for (size_t i = 0; i < N; ++i)
-			{
-				*this & x[i];
-			}
-		}
-
-	private:
-		template<typename T>
-		bool Read(T& x)
-		{
-			return stream.Read(reinterpret_cast<char*>(&x), sizeof(T));
-		}
-
-		IStream& stream;
-	};
-
-	class SizeCalculator : public IStream
-	{
-	public:
-		SizeCalculator() : m_size(0)
-		{};
-
-		size_t GetSize() const
-		{
-			return m_size;
-		}
-	private:
-		virtual bool Read(char* dst, size_t size) override
-		{
-			m_size += size;
-			return true;
-		}
-
-		size_t m_size;
-	};
-
-	template<>
-	inline void Writer::operator& (char& x)
-	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (short& x)
+	template<class A>
+	inline void Serialize(A& io, short& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (int& x)
+	template<class A>
+	inline void Serialize(A& io, int& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (long long& x)
+	template<class A>
+	inline void Serialize(A& io, long& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (long& x)
+	template<class A>
+	inline void Serialize(A& io, long long& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (unsigned char& x)
+	template<class A>
+	inline void Serialize(A& io, unsigned char& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (unsigned short& x)
+	template<class A>
+	inline void Serialize(A& io, unsigned short& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (unsigned int& x)
+	template<class A>
+	inline void Serialize(A& io, unsigned int& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (unsigned long long& x)
+	template<class A>
+	inline void Serialize(A& io, unsigned long& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (unsigned long& x)
+	template<class A>
+	inline void Serialize(A& io, unsigned long long& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (double& x)
+	template<class A>
+	inline void Serialize(A& io, float& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Writer::operator& (float& x)
+	template<class A>
+	inline void Serialize(A& io, double& v)
 	{
-		Write(x);
+		io.Access(v);
 	}
 
-	template<>
-	inline void Reader::operator& (char& x)
+	template<typename StreamType, typename T>
+	inline void operator << (Stream<StreamType>& stream, const T& object)
 	{
-		Read(x);
+		StreamType& stream_ = static_cast<StreamType&>(stream);
+		Accessor<StreamType, Writing> accessor(stream_);
+		accessor & const_cast<T&>(object);
 	}
 
-	template<>
-	inline void Reader::operator& (short& x)
+	template<typename StreamType, typename T>
+	inline void operator >> (Stream<StreamType>& stream, const T& object)
 	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (int& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (long long& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (long& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (unsigned char& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (unsigned short& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (unsigned int& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (unsigned long long& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (unsigned long& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (double& x)
-	{
-		Read(x);
-	}
-
-	template<>
-	inline void Reader::operator& (float& x)
-	{
-		Read(x);
-	}
-
-	template<typename T>
-	inline void operator << (OStream& stream, const T& object)
-	{
-		Writer writer(stream);
-		writer & const_cast<T&>(object);
-	}
-
-	template<typename T>
-	inline void operator >> (IStream& stream, T& object)
-	{
-		Reader reader(stream);
-		reader & object;
+		StreamType& stream_ = static_cast<StreamType&>(stream);
+		Accessor<StreamType, Reading> accessor(stream_);
+		accessor & const_cast<T&>(object);
 	}
 
 	///
-
-	template<class RW, typename T1, typename T2>
-	inline void Serialize(RW& io, std::pair<T1, T2>& v)
+	template<class A, typename T1, typename T2>
+	inline void Serialize(A& io, std::pair<T1, T2>& v)
 	{
 		io & v.first;
 		io & v.second;
 	}
 
-	template<class T>
-	inline void Serialize(class Writer& w, std::vector<T>& v)
+	template<typename T, typename Stream>
+	inline void Serialize(Accessor<Stream, Writing>& w, std::vector<T>& v)
 	{
 		size_t size = v.size();
 		w & size;
@@ -286,35 +165,35 @@ namespace bfio
 		}
 	}
 
-	template<class T>
-	inline void Serialize(class Reader& w, std::vector<T>& v)
+	template<typename T, typename Stream>
+	inline void Serialize(Accessor<Stream, Reading>& r, std::vector<T>& v)
 	{
 		size_t size;
-		w & size;
+		r & size;
 		v.resize(size);
 		for (size_t i = 0; i < size; ++i)
 		{
-			w & v[i];
+			r & v[i];
 		}
 	}
 
-	template<class Key, class Val>
-	inline void Serialize(class Reader& w, std::map<Key, Val>& x)
+	template<typename Stream, typename Key, typename Val>
+	inline void Serialize(Accessor<Stream, Reading>& r, std::map<Key, Val>& x)
 	{
 		size_t size;
-		w & size;
+		r & size;
 		Key k;
 		Val val;
 		for (size_t i = 0; i < size; ++i)
 		{
-			w & k;
-			w & val;
+			r & k;
+			r & val;
 			x[k] = val;
 		}
 	}
 
-	template<class Key, class Val>
-	inline void Serialize(class Writer& w, std::map<Key, Val>& x)
+	template<typename Stream, typename Key, typename Val>
+	inline void Serialize(Accessor<Stream, Writing>& w, std::map<Key, Val>& x)
 	{
 		size_t size = x.size();
 		w & size;
@@ -326,8 +205,8 @@ namespace bfio
 		}
 	}
 
-	template<class Key>
-	inline void Serialize(class Reader& w, std::set<Key>& x)
+	template<typename Stream, typename Key>
+	inline void Serialize(Accessor<Stream, Reading>& w, std::set<Key>& x)
 	{
 		size_t size;
 		w & size;
@@ -340,8 +219,8 @@ namespace bfio
 		}
 	}
 
-	template<class Key>
-	inline void Serialize(class Writer& w, std::set<Key>& x)
+	template<typename Stream, typename Key>
+	inline void Serialize(Accessor<Stream, Writing>& w, std::set<Key>& x)
 	{
 		size_t size = x.size();
 		w & size;
@@ -351,7 +230,8 @@ namespace bfio
 		}
 	}
 
-	inline void Serialize(class Writer& w, std::string& x)
+	template<typename Stream>
+	inline void Serialize(Accessor<Stream, Writing>& w, std::string& x)
 	{
 		size_t size = x.size();
 		w & size;
@@ -361,7 +241,8 @@ namespace bfio
 		}
 	}
 
-	inline void Serialize(class Reader& w, std::string& v)
+	template<typename Stream>
+	inline void Serialize(Accessor<Stream, Reading>& w, std::string& v)
 	{
 		size_t size;
 		w & size;
@@ -372,35 +253,53 @@ namespace bfio
 		}
 	}
 
+	class SizeCalculator : bfio::Stream<SizeCalculator>
+	{
+	public:
+		SizeCalculator(): m_size(0)
+		{}
+		bool Write(const char* dst, size_t size)
+		{
+			m_size += size;
+			return true;
+		}
+		size_t GetSize() const
+		{
+			return m_size;
+		}
+	private:
+		size_t m_size;
+	};
+
 	template <typename T>
 	inline size_t SizeOf()
 	{
 		SizeCalculator calc;
-		Reader reader(calc);
-		reader & *static_cast<T*>(nullptr);
+		Accessor<SizeCalculator, Writing> accessor(calc);
+		accessor & *reinterpret_cast<T*>(nullptr);
 		return calc.GetSize();
 	}
 
-	class CFileStream : public IOStream
+	class CFileStream : public bfio::Stream<CFileStream>
 	{
 	public:
 		CFileStream(FILE* f) : file(f)
 		{};
 
-	private:
-		virtual bool Write(const char* src, size_t size) override
+		bool Write(const char* src, size_t size)
 		{
 			return fwrite(src, size, 1, file) == size;
 		}
-		virtual bool Read(char* dst, size_t size) override
+		bool Read(char* dst, size_t size)
 		{
 			return fread(dst, size, 1, file) == size;
 		}
 
+	private:
 		FILE* file;
 	};
 
-	class MemoryStream : public IOStream
+	class MemoryStream : public bfio::Stream<CFileStream>
 	{
 		MemoryStream(const MemoryStream& other) = delete; // non construction-copyable
 		MemoryStream& operator=(const MemoryStream&) = delete; // non copyable
@@ -449,8 +348,7 @@ namespace bfio
 		~StaticMemoryStream()
 		{}
 
-	private:
-		virtual bool Write(const char* src, size_t size) override
+		bool Write(const char* src, size_t size)
 		{
 			if (m_offset + size > m_size)
 			{
@@ -466,7 +364,7 @@ namespace bfio
 			}
 		}
 
-		virtual bool Read(char* dst, size_t size) override
+		bool Read(char* dst, size_t size)
 		{
 			if (m_offset + size > m_size)
 			{
@@ -526,8 +424,7 @@ namespace bfio
 			}
 		}
 
-	private:
-		virtual bool Write(const char* src, size_t size) override
+		bool Write(const char* src, size_t size)
 		{
 			if (Resize(size + m_offset))
 			{
@@ -541,7 +438,7 @@ namespace bfio
 			}
 		}
 
-		virtual bool Read(char* dst, size_t size) override
+		bool Read(char* dst, size_t size)
 		{
 			if (m_offset + size > m_size)
 			{
@@ -557,6 +454,7 @@ namespace bfio
 			}
 		}
 
+	private:
 		// Round up to the next highest power of 2. https://graphics.stanford.edu/~seander/bithacks.html
 		size_t PowerOf2RoundUp(uint64_t v)
 		{

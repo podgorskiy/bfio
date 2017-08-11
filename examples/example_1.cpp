@@ -1,21 +1,21 @@
 #include <bfio.h>
 
-class MyStream : public bfio::IOStream
+struct  MyStream : bfio::Stream<MyStream>
 {
 public:
 	MyStream(FILE* f) : file(f)
 	{};
 
-private:
-	virtual bool Write(const char* src, size_t size) override
+	bool Write(const char* src, size_t size)
 	{
 		return fwrite(src, size, 1, file) == size;
 	}
-	virtual bool Read(char* dst, size_t size) override
+	bool Read(char* dst, size_t size)
 	{
 		return fread(dst, size, 1, file) == size;
 	}
 
+private:
 	FILE* file;
 };
 
@@ -31,8 +31,8 @@ struct MyData
 
 namespace bfio
 {
-	template<class RW>
-	inline void Serialize(RW& io, MyData& x)
+	template<class A>
+	inline void Serialize(A& io, MyData& x)
 	{
 		io & x.m;
 		io & x.str;
@@ -58,6 +58,8 @@ void main()
 		MyStream(f) << md;
 
 		MyStream(f) << std::string("asdasd");
+
+		printf("%d", (int)bfio::SizeOf<int>());
 
 		fclose(f);
 	}
