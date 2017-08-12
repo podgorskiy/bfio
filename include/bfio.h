@@ -1,9 +1,45 @@
 #pragma once
 #include <cstdlib>
+
+#ifndef BFIO_INCLUDE_VECTOR
+#define BFIO_INCLUDE_VECTOR 1
+#endif
+
+#ifndef BFIO_INCLUDE_STRING
+#define BFIO_INCLUDE_STRING 1
+#endif
+
+#ifndef BFIO_INCLUDE_MAP
+#define BFIO_INCLUDE_MAP 1
+#endif
+
+#ifndef BFIO_INCLUDE_SET
+#define BFIO_INCLUDE_SET 1
+#endif
+
+#ifndef BFIO_INCLUDE_LIST
+#define BFIO_INCLUDE_LIST 1
+#endif
+
+#if BFIO_INCLUDE_VECTOR
 #include <vector>
+#endif
+
+#if BFIO_INCLUDE_STRING
 #include <string>
+#endif
+
+#if BFIO_INCLUDE_MAP
 #include <map>
+#endif
+
+#if BFIO_INCLUDE_SET
 #include <set>
+#endif
+
+#if BFIO_INCLUDE_LIST
+#include <list>
+#endif
 
 namespace bfio
 {
@@ -180,6 +216,7 @@ namespace bfio
 		io & v.second;
 	}
 
+#if BFIO_INCLUDE_VECTOR
 	template<typename T, typename Stream>
 	inline void Serialize(Accessor<Stream, Writing>& w, std::vector<T>& v)
 	{
@@ -202,7 +239,37 @@ namespace bfio
 			r & v[i];
 		}
 	}
+#endif
 
+
+#if BFIO_INCLUDE_LIST
+	template<typename T, typename Stream>
+	inline void Serialize(Accessor<Stream, Writing>& w, std::list<T>& v)
+	{
+		size_t size = v.size();
+		w & size;
+		for (typename std::list<T>::iterator it = v.begin(), end = v.end(); it != end; ++it)
+		{
+			w & *it;
+		}
+	}
+
+	template<typename T, typename Stream>
+	inline void Serialize(Accessor<Stream, Reading>& r, std::list<T>& v)
+	{
+		size_t size;
+		r & size;
+		for (size_t i = 0; i < size; ++i)
+		{
+			T val;
+			r & val;
+			v.push_back(val);
+		}
+	}
+#endif
+
+
+#if BFIO_INCLUDE_MAP
 	template<typename Stream, typename Key, typename Val>
 	inline void Serialize(Accessor<Stream, Reading>& r, std::map<Key, Val>& x)
 	{
@@ -230,7 +297,9 @@ namespace bfio
 			w & it->second;
 		}
 	}
+#endif
 
+#if BFIO_INCLUDE_SET
 	template<typename Stream, typename Key>
 	inline void Serialize(Accessor<Stream, Reading>& w, std::set<Key>& x)
 	{
@@ -251,10 +320,12 @@ namespace bfio
 		w & size;
 		for (typename std::set<Key>::iterator it = x.begin(); it != x.end(); ++it)
 		{
-			w & *it;
+			w & const_cast<Key&>(*it);
 		}
 	}
+#endif
 
+#if BFIO_INCLUDE_STRING
 	template<typename Stream>
 	inline void Serialize(Accessor<Stream, Writing>& w, std::string& x)
 	{
@@ -277,6 +348,7 @@ namespace bfio
 			w & v[i];
 		}
 	}
+#endif
 
 
 	class SizeCalculator : public Stream<SizeCalculator>
