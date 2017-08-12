@@ -379,7 +379,7 @@ public:
 
 TEST_CASE("IO access counter test", "[access count]")
 {
-	char buff[128];
+	char buff[1024];
 	SECTION("Access count for c array of non pod")
 	{
 		CountStream stream(buff, 128);
@@ -423,6 +423,18 @@ TEST_CASE("IO access counter test", "[access count]")
 	{
 		CountStream stream(buff, 128);
 		glm::mat4 m;
+
+		(bfio::Stream<CountStream>&)stream << m;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> m;
+
+		REQUIRE(stream.readCount == 1);
+		REQUIRE(stream.writeCount == 1);
+	}
+	SECTION("Access count for array of GLM mat")
+	{
+		CountStream stream(buff, 1024);
+		glm::mat4 m[10];
 
 		(bfio::Stream<CountStream>&)stream << m;
 		stream.Seek(0);

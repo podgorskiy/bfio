@@ -161,6 +161,19 @@ namespace bfio
 		enum Condition { result = true };
 	};
 
+#if BFIO_INCLUDE_GLM
+	template<typename T, int size, glm::precision P>
+	struct IsPrimitiveType<glm::vec<size, T, P> >
+	{
+		enum Condition { result = true };
+	};
+	template<typename T, int m, int n, glm::precision P>
+	struct IsPrimitiveType<glm::mat<m, n, T, P> >
+	{
+		enum Condition { result = true };
+	};
+#endif
+
 	template<class Accessor, typename T, bool simple_pod>	
 	struct AccessOperatorImpl;
 
@@ -412,19 +425,6 @@ namespace bfio
 		w & size;
 		v.resize(size);
 		w.Access(&v[0], size);
-	}
-#endif
-
-#if BFIO_INCLUDE_GLM
-	template<class A, typename T, int size, glm::precision P>
-	inline void Serialize(A& io, glm::vec<size, T, P>& v)
-	{
-		io.Access(reinterpret_cast<T(&)[size]>(v[0]));
-	}
-	template<class A, typename T, int m, int n, glm::precision P>
-	inline void Serialize(A& io, glm::mat<m, n, T, P>& v)
-	{
-		io.Access(reinterpret_cast<T(&)[m * n]>(v[0][0]));
 	}
 #endif
 
