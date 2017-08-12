@@ -3,6 +3,7 @@ project (bfio)
 
 option(BFIO_EXAMPLES "Build bdio examples" ON)
 option(BFIO_TESTS "Build bdio tests" OFF)
+option(BFIO_TEST_WITH_GLM "Build bdio tests for glm" OFF)
 
 include_directories(include)
 

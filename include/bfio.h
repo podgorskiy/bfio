@@ -21,6 +21,10 @@
 #define BFIO_INCLUDE_LIST 1
 #endif
 
+#ifndef BFIO_INCLUDE_GLM
+#define BFIO_INCLUDE_GLM 1
+#endif
+
 #if BFIO_INCLUDE_VECTOR
 #include <vector>
 #endif
@@ -39,6 +43,10 @@
 
 #if BFIO_INCLUDE_LIST
 #include <list>
+#endif
+
+#if BFIO_INCLUDE_GLM
+#include <glm/glm.hpp>
 #endif
 
 namespace bfio
@@ -350,6 +358,34 @@ namespace bfio
 	}
 #endif
 
+#if BFIO_INCLUDE_GLM
+	template<class A, typename T, glm::precision P>
+	inline void Serialize(A& io, glm::vec<2, T, P>& v)
+	{
+		io & v.x;
+		io & v.y;
+	}
+	template<class A, typename T, glm::precision P>
+	inline void Serialize(A& io, glm::vec<3, T, P>& v)
+	{
+		io & v.x;
+		io & v.y;
+		io & v.z;
+	}
+	template<class A, typename T, glm::precision P>
+	inline void Serialize(A& io, glm::vec<4, T, P>& v)
+	{
+		io & v.x;
+		io & v.y;
+		io & v.z;
+		io & v.w;
+	}
+	template<class A, typename T, int m, int n, glm::precision P>
+	inline void Serialize(A& io, glm::mat<m, n, T, P>& v)
+	{
+		io & reinterpret_cast<T(&)[m * n]>(v[0][0]);
+	}
+#endif
 
 	class SizeCalculator : public Stream<SizeCalculator>
 	{
