@@ -83,6 +83,117 @@ namespace bfio
 		}
 	};
 
+	template<typename T>
+	struct IsSimplePODType
+	{
+		enum Condition { result = false };
+	};
+
+	template<>
+	struct IsSimplePODType<char>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<short>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<int>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<long>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<long long>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<unsigned char>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<unsigned short>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<unsigned int>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<unsigned long>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<unsigned long long>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<float>
+	{
+		enum Condition { result = true };
+	};
+
+	template<>
+	struct IsSimplePODType<double>
+	{
+		enum Condition { result = true };
+	};
+
+	template<class Accessor, typename T, bool simple_pod>	
+	struct AccessOperatorImpl;
+
+	template<class Accessor, typename T>
+	struct AccessOperatorImpl<Accessor, T, false>
+	{
+		static void Access(Accessor& io, T& x)
+		{
+			Serialize(io, x);
+		}
+		template<size_t N>
+		static void Access(Accessor& io, T(&x)[N])
+		{
+			for (size_t i = 0; i < N; ++i)
+			{
+				Serialize(io, x[i]);
+			}
+		}
+	};
+
+	template<class Accessor, typename T>
+	struct AccessOperatorImpl<Accessor, T, true>
+	{
+		static void Access(Accessor& io, T& x)
+		{
+			io.Access(x);
+		}
+		template<size_t N>
+		static void Access(Accessor& io, T(&x)[N])
+		{
+			io.Access(x);
+		}
+	};
 
 	template<class Stream, typename D>
 	class AccessorBase
@@ -94,23 +205,19 @@ namespace bfio
 		template<typename T>
 		void operator & (T& x)
 		{
-			Serialize(static_cast<D&>(*this), x);
+			AccessOperatorImpl<D, T, IsSimplePODType<T>::result>::Access(static_cast<D&>(*this), x);
 		}
 
 		template<typename T, size_t N>
 		void operator & (T(&x)[N])
 		{
-			for (size_t i = 0; i < N; ++i)
-			{
-				*this & x[i];
-			}
+			AccessOperatorImpl<D, T, IsSimplePODType<T>::result>::Access(static_cast<D&>(*this), x);
 		}
-		
+				
 	protected:
 		Stream& stream;
 	};
-
-
+	
 	template<class Stream>
 	class Accessor<Stream, Reading> : public AccessorBase<Stream, Accessor<Stream, Reading> >
 	{
@@ -121,6 +228,11 @@ namespace bfio
 		bool Access(T& x)
 		{
 			return stream.Read(reinterpret_cast<char*>(&x), sizeof(T));
+		}
+		template<typename T>
+		bool Access(T* x, size_t count)
+		{
+			return stream.Read(reinterpret_cast<char*>(x), sizeof(T) * count);
 		}
 
 	private:
@@ -139,83 +251,15 @@ namespace bfio
 		{
 			return stream.Write(reinterpret_cast<const char*>(&x), sizeof(T));
 		}
+		template<typename T>
+		bool Access(T* x, size_t count)
+		{
+			return stream.Write(reinterpret_cast<const char*>(x), sizeof(T) * count);
+		}
 		
 	private:
 		using AccessorBase<Stream, Accessor<Stream, Writing> >::stream;
 	};
-
-
-	template<class A>
-	inline void Serialize(A& io, char& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, short& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, int& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, long& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, long long& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, unsigned char& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, unsigned short& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, unsigned int& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, unsigned long& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, unsigned long long& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, float& v)
-	{
-		io.Access(v);
-	}
-
-	template<class A>
-	inline void Serialize(A& io, double& v)
-	{
-		io.Access(v);
-	}
 
 	template<class A, typename T1, typename T2>
 	inline void Serialize(A& io, std::pair<T1, T2>& v)
@@ -339,10 +383,7 @@ namespace bfio
 	{
 		size_t size = x.size();
 		w & size;
-		for (size_t i = 0; i < size; ++i)
-		{
-			w & x[i];
-		}
+		w.Access(x.data(), size);
 	}
 
 	template<typename Stream>
@@ -351,10 +392,7 @@ namespace bfio
 		size_t size;
 		w & size;
 		v.resize(size);
-		for (size_t i = 0; i < size; ++i)
-		{
-			w & v[i];
-		}
+		w.Access(&v[0], size);
 	}
 #endif
 
