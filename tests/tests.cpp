@@ -41,7 +41,7 @@ TEST_CASE("Size calculation test", "[sizeof][POD struct]")
 	}
 }
 
-struct  TestStream : bfio::Stream<TestStream>
+struct TestStream : bfio::Stream<TestStream>
 {
 public:
 	bool Write(const char* src, size_t size)
@@ -355,6 +355,109 @@ TEST_CASE("GLM", "[GLM][static]")
 }
 
 #endif
+
+struct CountStream : public bfio::Stream<CountStream>, public bfio::StaticMemoryStream
+{
+public:
+	CountStream(char* data, size_t size) : StaticMemoryStream(data, size), readCount(0), writeCount(0)
+	{}
+
+	bool Write(const char* src, size_t size)
+	{
+		++writeCount;
+		return StaticMemoryStream::Write(src, size);
+	}
+	bool Read(char* dst, size_t size)
+	{
+		++readCount;
+		return StaticMemoryStream::Read(dst, size);
+	}
+
+	size_t writeCount;
+	size_t readCount;
+};
+
+TEST_CASE("IO access counter test", "[access count]")
+{
+	char buff[128];
+	SECTION("Access count for c array of non pod")
+	{
+		CountStream stream(buff, 128);
+		std::string a[3];
+
+		(bfio::Stream<CountStream>&)stream << a;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> a;
+
+		REQUIRE(stream.readCount != 1);
+		REQUIRE(stream.writeCount != 1);
+	}
+
+	SECTION("Access count for c array")
+	{
+		CountStream stream(buff, 128);
+		int a[10] = {0};
+
+		(bfio::Stream<CountStream>&)stream << a;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> a;
+
+		REQUIRE(stream.readCount == 1);
+		REQUIRE(stream.writeCount == 1);
+	}
+
+#if BFIO_INCLUDE_GLM
+	SECTION("Access count for GLM vec")
+	{
+		CountStream stream(buff, 128);
+		glm::vec4 v;
+
+		(bfio::Stream<CountStream>&)stream << v;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> v;
+
+		REQUIRE(stream.readCount == 1);
+		REQUIRE(stream.writeCount == 1);
+	}
+	SECTION("Access count for GLM mat")
+	{
+		CountStream stream(buff, 128);
+		glm::mat4 m;
+
+		(bfio::Stream<CountStream>&)stream << m;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> m;
+
+		REQUIRE(stream.readCount == 1);
+		REQUIRE(stream.writeCount == 1);
+	}
+#endif
+	SECTION("Access count for string")
+	{
+		CountStream stream(buff, 128);
+		std::string str("asdasd");
+
+		(bfio::Stream<CountStream>&)stream << str;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> str;
+
+		REQUIRE(stream.readCount == 2);
+		REQUIRE(stream.writeCount == 2);
+	}
+	SECTION("Access count for vector of simple pod")
+	{
+		CountStream stream(buff, 128);
+		std::vector<int> v = {1, 2, 3, 4, 1, 2, 3, 4 };
+
+		(bfio::Stream<CountStream>&)stream << v;
+		stream.Seek(0);
+		(bfio::Stream<CountStream>&)stream >> v;
+
+		REQUIRE(stream.readCount == 2);
+		REQUIRE(stream.writeCount == 2);
+	}
+}
+
 
 struct MyData
 {

@@ -84,79 +84,79 @@ namespace bfio
 	};
 
 	template<typename T>
-	struct IsSimplePODType
+	struct IsPrimitiveType
 	{
 		enum Condition { result = false };
 	};
 
 	template<>
-	struct IsSimplePODType<char>
+	struct IsPrimitiveType<char>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<short>
+	struct IsPrimitiveType<short>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<int>
+	struct IsPrimitiveType<int>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<long>
+	struct IsPrimitiveType<long>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<long long>
+	struct IsPrimitiveType<long long>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<unsigned char>
+	struct IsPrimitiveType<unsigned char>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<unsigned short>
+	struct IsPrimitiveType<unsigned short>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<unsigned int>
+	struct IsPrimitiveType<unsigned int>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<unsigned long>
+	struct IsPrimitiveType<unsigned long>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<unsigned long long>
+	struct IsPrimitiveType<unsigned long long>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<float>
+	struct IsPrimitiveType<float>
 	{
 		enum Condition { result = true };
 	};
 
 	template<>
-	struct IsSimplePODType<double>
+	struct IsPrimitiveType<double>
 	{
 		enum Condition { result = true };
 	};
@@ -205,13 +205,13 @@ namespace bfio
 		template<typename T>
 		void operator & (T& x)
 		{
-			AccessOperatorImpl<D, T, IsSimplePODType<T>::result>::Access(static_cast<D&>(*this), x);
+			AccessOperatorImpl<D, T, IsPrimitiveType<T>::result>::Access(static_cast<D&>(*this), x);
 		}
 
 		template<typename T, size_t N>
 		void operator & (T(&x)[N])
 		{
-			AccessOperatorImpl<D, T, IsSimplePODType<T>::result>::Access(static_cast<D&>(*this), x);
+			AccessOperatorImpl<D, T, IsPrimitiveType<T>::result>::Access(static_cast<D&>(*this), x);
 		}
 				
 	protected:
@@ -268,16 +268,38 @@ namespace bfio
 		io & v.second;
 	}
 
+
 #if BFIO_INCLUDE_VECTOR
+	template<class Accessor, typename T, bool simple_type>
+	struct VectorSerializeImpl;
+
+	template<class Accessor, typename T>
+	struct VectorSerializeImpl<Accessor, T, false>
+	{
+		static void Access(Accessor& io, std::vector<T>& x)
+		{
+			for (size_t i = 0, l = x.size(); i < l; ++i)
+			{
+				io & x[i];
+			}
+		}
+	};
+
+	template<class Accessor, typename T>
+	struct VectorSerializeImpl<Accessor, T, true>
+	{
+		static void Access(Accessor& io, std::vector<T>& x)
+		{
+			io.Access(x.data(), x.size());
+		}
+	};
+
 	template<typename T, typename Stream>
 	inline void Serialize(Accessor<Stream, Writing>& w, std::vector<T>& v)
 	{
 		size_t size = v.size();
 		w & size;
-		for (size_t i = 0, l = v.size(); i < l; ++i)
-		{
-			w & v[i];
-		}
+		VectorSerializeImpl<Accessor<Stream, Writing>, T, IsPrimitiveType<T>::result>::Access(w, v);
 	}
 
 	template<typename T, typename Stream>
@@ -286,10 +308,7 @@ namespace bfio
 		size_t size;
 		r & size;
 		v.resize(size);
-		for (size_t i = 0; i < size; ++i)
-		{
-			r & v[i];
-		}
+		VectorSerializeImpl<Accessor<Stream, Reading>, T, IsPrimitiveType<T>::result>::Access(r, v);
 	}
 #endif
 
