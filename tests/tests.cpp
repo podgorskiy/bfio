@@ -249,7 +249,7 @@ TEST_CASE("std::pair test", "[pair][static]")
 	REQUIRE(pRead.second == 3.14f);
 }
 
-TEST_CASE("c array", "[carray][static]")
+TEST_CASE("c array of simple pod type", "[carray][static]")
 {
 	char buff[33];
 	bfio::StaticMemoryStream sms(buff, 33);
@@ -262,6 +262,20 @@ TEST_CASE("c array", "[carray][static]")
 	REQUIRE(vRead[0] == 2);
 	REQUIRE(vRead[1] == 3);
 	REQUIRE(vRead[2] == 4);
+}
+
+TEST_CASE("c array of non pod type", "[carray][static]")
+{
+	char buff[33];
+	bfio::StaticMemoryStream sms(buff, 33);
+	std::string vWrite[3] = { "a", "b", "c" };
+	sms << vWrite;
+	sms.Seek(0);
+	std::string vRead[3];
+	sms >> vRead;
+	REQUIRE(vRead[0] == "a");
+	REQUIRE(vRead[1] == "b");
+	REQUIRE(vRead[2] == "c");
 }
 
 #if BFIO_INCLUDE_GLM
