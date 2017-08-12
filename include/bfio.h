@@ -22,7 +22,7 @@
 #endif
 
 #ifndef BFIO_INCLUDE_GLM
-#define BFIO_INCLUDE_GLM 1
+#define BFIO_INCLUDE_GLM 0
 #endif
 
 #if BFIO_INCLUDE_VECTOR
