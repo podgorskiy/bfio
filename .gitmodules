@@ -1,6 +1,0 @@
-[submodule "externals/Catch"]
-	path = externals/Catch
-	url = https://github.com/philsquared/Catch.git
-[submodule "externals/glm"]
-	path = externals/glm
-	url = https://github.com/g-truc/glm.git
