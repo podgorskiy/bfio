@@ -1,0 +1,28 @@
+language: cpp
+matrix:
+  include:
+    - compiler: gcc
+      os: linux
+    - compiler: clang
+      os: osx
+
+before_install:
+  - if [ "$CXX" = "g++" ]; then sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test; fi
+  - if [ "$CXX" = "g++" ]; then sudo apt-get -qq update; fi
+  - if [ "$CXX" = "g++" ]; then sudo apt-get -qq install g++-4.8; fi
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+ 
+script:
+  - mkdir build && cd build
+  - cmake ../ -DBFIO_TESTS=ON
+  - make all
+  - make test
+
+branches:
+  only:
+    - master
+
+notifications:
+  email: false
