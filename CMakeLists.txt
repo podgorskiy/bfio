@@ -20,17 +20,16 @@ if (BFIO_EXAMPLES OR BFIO_TESTS)
 endif()
 
 if (BFIO_EXAMPLES)
-    add_subdirectory(examples)
+	add_subdirectory(examples)
 endif()
 
 if (BFIO_TESTS)
 	enable_testing()
-    add_subdirectory(tests)
+	add_subdirectory(tests)
 endif()
 
 if (BFIO_INSTALL)
-    install(DIRECTORY include DESTINATION include
-		FILES_MATCHING PATTERN bfio.h)
+	install(FILES include/bfio.h DESTINATION include)
 	
 	if (NOT TARGET uninstall)
 	configure_file(
