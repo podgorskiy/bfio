@@ -7,3 +7,5 @@ if (BFIO_TEST_WITH_GLM)
 endif()
 
 add_executable(tests tests.cpp ${HEADERS})
+
+add_test(NAME CatchTests COMMAND tests)
