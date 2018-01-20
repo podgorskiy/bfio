@@ -8,8 +8,8 @@
  */
 
 #pragma once
-
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 #ifndef BFIO_INCLUDE_VECTOR
@@ -444,7 +444,7 @@ namespace bfio
 	public:
 		SizeCalculator(): m_size(0)
 		{}
-		bool Write(const char* dst, size_t size)
+		bool Write(const char*, size_t size)
 		{
 			m_size += size;
 			return true;
@@ -490,10 +490,10 @@ namespace bfio
 
 	class MemoryStream
 	{
-		MemoryStream(const MemoryStream& other) {}; // non construction-copyable
-		MemoryStream& operator=(const MemoryStream&) {}; // non copyable
+		MemoryStream(const MemoryStream& other); // non construction-copyable
+		MemoryStream& operator=(const MemoryStream& x); // non copyable
 	public:
-		MemoryStream(char* data, size_t size) : m_size(size), m_offset(0), m_data(data)
+		MemoryStream(char* data, size_t size) : m_data(data), m_size(size), m_offset(0)
 		{};
 
 		size_t GetSize() const
@@ -650,7 +650,7 @@ namespace bfio
 
 	private:
 		// Round up to the next highest power of 2. https://graphics.stanford.edu/~seander/bithacks.html
-		size_t PowerOf2RoundUp(uint64_t v)
+		size_t PowerOf2RoundUp(size_t v)
 		{
 			v--;
 			v |= v >> 1;
@@ -690,3 +690,4 @@ namespace bfio
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+ 
