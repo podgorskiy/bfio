@@ -1,10 +1,10 @@
 cmake_minimum_required (VERSION 3.1 FATAL_ERROR)
 project (bfio)
 
-option(BFIO_EXAMPLES "Build bdio examples" OFF)
+option(BFIO_EXAMPLES "Build bfio examples" OFF)
 option(BFIO_INSTALL "Generate installation target" ON)
-option(BFIO_TESTS "Build bdio tests" OFF)
-option(BFIO_TEST_WITH_GLM "Build bdio tests for glm" OFF)
+option(BFIO_TESTS "Build bfio tests" OFF)
+option(BFIO_TEST_WITH_GLM "Build bfio tests for glm" OFF)
 
 include_directories(include)
 

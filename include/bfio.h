@@ -1,6 +1,16 @@
+/**
+ * bfio - binary formats input/output
+ * --------------------------------------------------------
+ * Copyright (C) 2017-2018, by Stanislav Pidhorskyi (stanislav@podgorskiy.com)
+ *
+ * This library is distributed under the MIT License. See notice at the end
+ * of this file.
+ */
+
 #pragma once
-#include <cstdlib>
-#include <cstring>
+
+#include <stdlib.h>
+#include <string.h>
 
 #ifndef BFIO_INCLUDE_VECTOR
 #define BFIO_INCLUDE_VECTOR 1
@@ -453,7 +463,7 @@ namespace bfio
 	{
 		SizeCalculator calc;
 		Accessor<SizeCalculator, Writing> accessor(calc);
-		accessor & *(T*)(nullptr);
+		accessor & *(T*)(NULL);
 		return calc.GetSize();
 	}
 
@@ -480,8 +490,8 @@ namespace bfio
 
 	class MemoryStream
 	{
-		MemoryStream(const MemoryStream& other) = delete; // non construction-copyable
-		MemoryStream& operator=(const MemoryStream&) = delete; // non copyable
+		MemoryStream(const MemoryStream& other) {}; // non construction-copyable
+		MemoryStream& operator=(const MemoryStream&) {}; // non copyable
 	public:
 		MemoryStream(char* data, size_t size) : m_size(size), m_offset(0), m_data(data)
 		{};
@@ -568,11 +578,11 @@ namespace bfio
 			InitialReservedSize = 16
 		};
 	public:
-		DynamicMemoryStream() : MemoryStream(nullptr, 0), m_reserved(0)
+		DynamicMemoryStream() : MemoryStream(NULL, 0), m_reserved(0)
 		{
 			Resize(InitialReservedSize);
 		}
-		DynamicMemoryStream(const char* data, size_t size) : MemoryStream(nullptr, 0), m_reserved(0)
+		DynamicMemoryStream(const char* data, size_t size) : MemoryStream(NULL, 0), m_reserved(0)
 		{
 			Resize(InitialReservedSize < size ? size : InitialReservedSize);
 			memcpy(m_data, data, size);
@@ -589,7 +599,7 @@ namespace bfio
 			{
 				size_t newReserved = PowerOf2RoundUp(newSize);
 				char* newData = static_cast<char*>(realloc(m_data, newReserved));
-				if (newData != nullptr)
+				if (newData != NULL)
 				{
 					m_reserved = newReserved;
 					m_data = newData;
@@ -656,3 +666,27 @@ namespace bfio
 		size_t m_reserved;
 	};
 }
+
+/**
+ * MIT License
+
+ * Copyright (c) 2017 Stanislav Pidhorskyi
+
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */

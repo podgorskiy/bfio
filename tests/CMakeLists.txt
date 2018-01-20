@@ -8,6 +8,4 @@ endif()
 
 add_executable(tests tests.cpp ${HEADERS})
 
-set_target_properties(tests PROPERTIES CXX_STANDARD 11 CXX_EXTENSIONS NO)
-
 add_test(NAME CatchTests COMMAND tests)
