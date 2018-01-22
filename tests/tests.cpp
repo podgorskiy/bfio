@@ -478,7 +478,7 @@ struct MyData
 	std::vector<std::pair<std::string, float> > v;
 	int a[3];
 
-	bool operator ==(const MyData& other)
+	bool operator ==(const MyData& other) const
 	{
 		return m == other.m && str == other.str && v == v && memcmp(a, other.a, sizeof(a)) == 0;
 	}
