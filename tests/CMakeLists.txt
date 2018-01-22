@@ -6,6 +6,8 @@ if (BFIO_TEST_WITH_GLM)
 	add_definitions(-DBFIO_INCLUDE_GLM=1)
 endif()
 
+set (CMAKE_CXX_STANDARD 11)
+
 add_executable(tests tests.cpp ${HEADERS})
 
 add_test(NAME CatchTests COMMAND tests)
