@@ -13,6 +13,10 @@ Goals:
 
 \- The goal is not just to serialize/deserialize objects, but write and read specific (existing) binary formats.
 
+Below presented a very simple show case for reading/writing TGA headers, you can find full example [here](https://github.com/podgorskiy/bfio/blob/master/examples/example_3.cpp).
+
+For more complex examples see [streams example](https://github.com/podgorskiy/bfio/blob/master/examples/example_1.cpp) and  [reading zip archive](https://github.com/podgorskiy/bfio/blob/master/examples/example_2.cpp) example.
+
 # Showcase. Truevision TGA header
 
 The detailed description of the format can be found at [wiki](https://en.wikipedia.org/wiki/Truevision_TGA)
