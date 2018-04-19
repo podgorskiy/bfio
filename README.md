@@ -116,6 +116,7 @@ Now we can use them as follows:
 ```cpp
 int main()
 {
+	// Reading image header
 	FILE* f = fopen("test.tga", "rb");
 	bfio::CFileStream stream(f);
 
@@ -133,6 +134,33 @@ int main()
 		,tgaHeader.imageSpec.pixelDepth);
 
 	fclose(f);
+
+	// Writing image header
+	FILE* fout = fopen("header.bin", "wb");
+
+	bfio::CFileStream outstream(fout);
+	outstream << tgaHeader;
+	fclose(fout);
+
 	return 0;
 }
+
 ```
+
+# Features.
+
+* Provides default serialization functions for some standard containers. 
+To enable containers, you need to define one of those:
+  * *BFIO_INCLUDE_VECTOR* for *std::vector*
+  * *BFIO_INCLUDE_STRING* for *std::string*
+  * *BFIO_INCLUDE_MAP* for *std::map*
+  * *BFIO_INCLUDE_SET* for *std::set*
+  * *BFIO_INCLUDE_LIST* for *std::list*
+* Has support for glm. To enable define *BFIO_INCLUDE_GLM*
+* Has *SizeOf* function that can return size of the object to be serialized, with optimizations on it is optimized to ilined constant.
+* Has predefined streams:
+  * *CFileStream* for working with C files
+  * *StaticMemoryStream* for working with preallocated memory buffer
+  * *DynamicMemoryStream* for working with dynamically growing memory buffer
+* Allows defining custom streams for working with any I/O API.
+
