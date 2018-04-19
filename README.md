@@ -77,6 +77,7 @@ struct MainTGAHeader
 ```
 
 Then, we should define serialization functions for each type:
+(Syntax is heavily inspired by [boost serialization library](https://www.boost.org/doc/libs/1_67_0/libs/serialization/doc/).)
 
 ```cpp
 namespace bfio
