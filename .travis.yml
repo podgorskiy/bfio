@@ -16,7 +16,7 @@ install:
  
 script:
   - mkdir build && cd build
-  - cmake ../ -DBFIO_TESTS=ON
+  - cmake ../ -DBFIO_EXAMPLES=ON -DBFIO_TESTS=ON
   - make all
   - make test
 
