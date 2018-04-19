@@ -1,5 +1,7 @@
 # bfio - Binary formats I/O. 
 
+[![Build Status](https://travis-ci.org/podgorskiy/bfio.svg?branch=master)](https://travis-ci.org/podgorskiy/bfio)
+
 **bfio** is a small, one header only library for serialization/deserialization of C/C++ objects.
 
 Goals:
